@@ -1,0 +1,132 @@
+startView()
+{
+    RESPONSE=$(zenity --info --title 'mp3 player' \
+            --text 'Witamy w odtwarzaczu mp3, wybierz co chcesz zrobić' \
+            --ok-label "Zamknij" \
+            --extra-button 'Odtwórz przykładowe pliki' \
+            --extra-button "Wybierz pliki do odtworzenia" \
+            --extra-button "Wybierz playliste do odtworzenia"
+            )
+    rc=$?
+
+    RESPONSE=${RESPONSE}
+
+    if [ $rc -eq 0 ]; then
+        # Exit apllication
+        ZENITY_RESPONSES=$EXIT_CODE
+        exit
+    elif [ "$RESPONSE" == 'Odtwórz przykładowe pliki' ]; then
+        # play example files
+        ZENITY_RESPONSES=$EXAMPLE_FILES_CODE
+        PLAYING="true"
+    elif [ "$RESPONSE" == 'Wybierz pliki do odtworzenia' ]; then
+        # Pick files to play
+        ZENITY_RESPONSES=$CUSTOM_FILES_CODE
+        mp3PickerView
+    elif [ "$RESPONSE" == 'Wybierz playliste do odtworzenia' ]; then
+        # pick playlist to play
+        ZENITY_RESPONSES=$PLAYLIST_PICKER_CODE
+        playlistPickerView
+    else
+        echo "Dialog closed or an error occurred"
+        # Error, exit apllication
+        ZENITY_RESPONSES=$ERROR_CODE
+    fi
+}
+
+playingView()
+{
+    RESPONSE=$(zenity --info --title 'Choose!' \
+            --text 'Choose A or B or C' \
+            --ok-label "Zamknij" \
+            --extra-button 'Play' \
+            --extra-button "Stop" \
+            --extra-button "<<" \
+            --extra-button ">>" \
+            --extra-button "zapisz do playlisty"
+            )
+    rc=$?
+
+    if [ $rc -eq 0 ]; then
+        # Exit apllication
+        ZENITY_RESPONSES=$EXIT_CODE
+        handleExit
+    elif [ "$RESPONSE" == 'Play' ]; then
+        # play files
+        ZENITY_RESPONSES=$PLAY_CODE
+    elif [ "$RESPONSE" == 'Stop' ]; then
+        # stop playing
+        ZENITY_RESPONSES=$PAUSE_CODE
+    elif [ "$RESPONSE" == '<<' ]; then
+        # go to previous
+        ZENITY_RESPONSES=$PREVIOUS_CODE
+    elif [ "$RESPONSE" == '>>' ]; then
+        # go to next
+        ZENITY_RESPONSES=$NEXT_CODE
+    elif [ "$RESPONSE" == 'zapisz do playlisty' ]; then
+        # save playlist
+        ZENITY_RESPONSES=$SAVE_PLAYLIST
+        SAVE_PLAYLIST
+    else
+        echo "Dialog closed or an error occurred"
+        # Error, exit apllication
+        ZENITY_RESPONSES=$ERROR_CODE
+    fi
+}
+
+playlistPickerView()
+{
+    if [ -r "$CONFIG_FILE_PATH" ]; then
+        # Declare an empty array
+        file_contents=()
+
+        # Read the file line by line and append each line to the array
+        while read WIERSZ; do
+            file_contents+=("$WIERSZ")
+        done < "$CONFIG_FILE_PATH"
+    else
+        NEW="$(echo "$CONFIG_FILE_PATH" | tr -d '\r')"
+        touch "$CONFIG_FILE_PATH"
+    fi
+    for (( i=0; i<${#file_contents[*]}; ++i)); do
+        data+=( "${file_contents[$i]}" )
+    done
+    RESPONSE=$(zenity --list \
+            --title "Wybierz playliste do odtworzenia" \
+            --height 480 \
+            --width 620 \
+            --column "playlista" "${data[@]}")
+    PLAYING="true"
+}
+
+mp3PickerView()
+{
+    FILE=$(zenity \
+        --file-selection \
+        --title="Wybierz pliki do zagrania" \
+        --multiple
+        )
+    echo $FILE
+    PLAYING="true"
+}
+
+NamePickerPlaylistView()
+{
+    NEW_PLAYLIST_DATE=$(date +%s)
+    RESPONSE=$(zenity --entry \
+            --title="Nowa playlista" \
+            --text="Nadaj nazwe swojej playliscie" \
+            --entry-text "playlista${NEW_PLAYLIST_DATE}")
+}
+
+handleExit()
+{
+    #PID_TO_KILL=$(ps | grep ffplay | sed 's/ \+/ /g' | awk '{print $1}')
+    #echo $PID_TO_KILL
+    if [ "$ffplay_pid" != "null" ]; then
+        kill $ffplay_pid
+        #kill $PID_TO_KILL
+        ffplay_pid="null"
+    fi
+    startView
+}
