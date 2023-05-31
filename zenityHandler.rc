@@ -18,7 +18,7 @@ startView()
     elif [ "$RESPONSE" == 'Odtwórz przykładowe pliki' ]; then
         # play example files
         ZENITY_RESPONSES=$EXAMPLE_FILES_CODE
-        PLAYING="true"
+        mp3Player
     elif [ "$RESPONSE" == 'Wybierz pliki do odtworzenia' ]; then
         # Pick files to play
         ZENITY_RESPONSES=$CUSTOM_FILES_CODE
@@ -53,6 +53,11 @@ playingView()
         ZENITY_RESPONSES=$EXIT_CODE
         PLAYING="false"
         handleExit
+        ZENITY_PID="0"
+        echo $PLAYING
+        #echo $ffplay_pid
+        #ffplay_pid="null"
+        #echo "wyjscie"
     elif [ "$RESPONSE" == 'Play' ]; then
         # play files
         ZENITY_RESPONSES=$PLAY_CODE
@@ -74,6 +79,7 @@ playingView()
         # Error, exit apllication
         ZENITY_RESPONSES=$ERROR_CODE
     fi
+    echo $PLAYING
 }
 
 playlistPickerView()
@@ -98,7 +104,6 @@ playlistPickerView()
             --height 480 \
             --width 620 \
             --column "playlista" "${data[@]}")
-    PLAYING="true"
 }
 
 mp3PickerView()
@@ -108,8 +113,6 @@ mp3PickerView()
         --title="Wybierz pliki do zagrania" \
         --multiple
         )
-    echo $FILE
-    PLAYING="true"
 }
 
 NamePickerPlaylistView()
@@ -124,13 +127,13 @@ NamePickerPlaylistView()
 handleExit()
 {
     killer
-    startView
+    #startView &
 }
 
 killer()
 {
     if [ "$ffplay_pid" != "null" ]; then
         kill $ffplay_pid
-        ffplay_pid="null"
+        #ffplay_pid="null"
     fi
 }

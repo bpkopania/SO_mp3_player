@@ -21,12 +21,40 @@
 . zenityHandler.rc
 . variables.rc
 
-#start the program, open startView
+mp3Player()
+{
+  PLAYING="true"
+  ZENITY_PID=0
+  ITERATOR=0
+
+  ffplay -v 0 -nodisp -autoexit testowy.mp3 &
+  ffplay_pid=$!
+
+  while [ "$PLAYING" == "true" ]; do
+
+    while ps -p $ffplay_pid > /dev/null
+    do
+      if [ $ZENITY_PID -eq 0 ]; then
+        playingView &
+        ZENITY_PID=$!
+      fi
+    done
+    #echo $PLAYING
+    #ffplay_pid="null"
+    #kill $ZENITY_PID
+    ZENITY_PID=0
+    #echo "zmiana statusu"
+    PLAYING="false"
+    #ZENITY_PID=0;
+  done
+  startView
+}
+
+#start the program
 
 ffplay_pid="null"
 PLAYING="false"
 SONGS=()
-ITERATOR=0
 
 while getopts "vhD" arg; do
   case $arg in
@@ -55,31 +83,5 @@ while getopts "vhD" arg; do
   esac
 done
 
+# Open startView
 startView
-
-ZENITY_PID=0
-
-ffplay -v 0 -nodisp -autoexit testowy.mp3 &
-ffplay_pid=$!
-
-while [ "$PLAYING" == "true" ]; do
-  
-  #ffplay_pid=$!
-  #ps
-  echo $ffplay
-  while ps -p $ffplay_pid > /dev/null
-  do
-    if [ $ZENITY_PID -eq 0 ]; then
-      playingView &
-      ZENITY_PID=$!
-    fi
-  done
-  ffplay_pid="null"
-  #kill $ZENITY_PID
-  ZENITY_PID="null"
-  echo "zmiana statusu"
-  #PLAYING="false"
-  ZENITY_PID=0;
-done
-
-killer
