@@ -36,8 +36,9 @@ startView()
 
 playingView()
 {
+    TEXT_ON_PLAY="domyslny tekst"
     RESPONSE=$(zenity --info --title 'Choose!' \
-            --text 'Choose A or B or C' \
+            --text $TEXT_ON_PLAY \
             --ok-label "Zamknij" \
             --extra-button 'Play' \
             --extra-button "Stop" \
@@ -50,6 +51,7 @@ playingView()
     if [ $rc -eq 0 ]; then
         # Exit apllication
         ZENITY_RESPONSES=$EXIT_CODE
+        PLAYING="false"
         handleExit
     elif [ "$RESPONSE" == 'Play' ]; then
         # play files
@@ -121,12 +123,14 @@ NamePickerPlaylistView()
 
 handleExit()
 {
-    #PID_TO_KILL=$(ps | grep ffplay | sed 's/ \+/ /g' | awk '{print $1}')
-    #echo $PID_TO_KILL
+    killer
+    startView
+}
+
+killer()
+{
     if [ "$ffplay_pid" != "null" ]; then
         kill $ffplay_pid
-        #kill $PID_TO_KILL
         ffplay_pid="null"
     fi
-    startView
 }

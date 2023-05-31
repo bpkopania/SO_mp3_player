@@ -74,53 +74,12 @@ while [ "$PLAYING" == "true" ]; do
       ZENITY_PID=$!
     fi
   done
-  kill $ZENITY_PID
+  ffplay_pid="null"
+  #kill $ZENITY_PID
   ZENITY_PID="null"
   echo "zmiana statusu"
-  PLAYING="false"
+  #PLAYING="false"
   ZENITY_PID=0;
-  playingView
 done
 
-handleExit
-
-# test
-
-# zenity --question \
-#     --text "Do you want to proceed?" \
-#     --ok-label "OK" \
-#     --cancel-label "Cancel" \
-#     --extra-button "Extra" \
-#     --extra-button "superExtra"
-
-# RESPONSE=$?
-# echo $RESPONSE
-# if [ $RESPONSE -eq 0 ]; then
-#     echo "OK button clicked"
-#     # Continue with further actions for OK button
-# elif [ $RESPONSE -eq 1 ]; then
-#     echo "Cancel button clicked"
-#     # Continue with further actions for Cancel button
-# elif [ $RESPONSE -eq 2 ]; then
-#     echo "Extra button clicked"
-#     # Continue with further actions for Extra button
-# else
-#     echo "Dialog closed or an error occurred"
-#     # Handle other scenarios if needed
-# fi
-
-
-# if [ $RESPONSE -eq 1 ]; then
-#     echo "OK button clicked"
-#     ffplay -v 0 -nodisp -autoexit testowy.mp3 &
-#     ffplay_pid=$!
-
-#     # Wyświetlenie okna Zenity z przyciskiem "Stop"
-#     zenity --question --text="Czy chcesz zatrzymać odtwarzanie?" --title="Odtwarzanie" --ok-label="Tak" --cancel-label="Nie"
-
-#     # Sprawdzenie, czy użytkownik kliknął przycisk "Tak"
-#     if [ $? -eq 0 ]; then
-#         # Wysłanie sygnału przerwania (SIGINT) do procesu ffplay
-#         kill -SIGINT $ffplay_pid
-#     fi
-# fi
+killer
