@@ -18,10 +18,12 @@ startView()
     elif [ "$RESPONSE" == 'Odtwórz przykładowe pliki' ]; then
         # play example files
         ZENITY_RESPONSES=$EXAMPLE_FILES_CODE
+        PLAYLIST_NAME="Przykladowe pliki"
         mp3Player
     elif [ "$RESPONSE" == 'Wybierz pliki do odtworzenia' ]; then
         # Pick files to play
         ZENITY_RESPONSES=$CUSTOM_FILES_CODE
+        PLAYLIST_NAME="Nowe pliki"
         mp3PickerView
     elif [ "$RESPONSE" == 'Wybierz playliste do odtworzenia' ]; then
         # pick playlist to play
@@ -36,9 +38,10 @@ startView()
 
 playingView()
 {
-    TEXT_ON_PLAY="domyslny tekst"
+    #getStats
+    TEXT_ON_PLAY=$PLAYLIST_NAME'\nCzas trwania: '$SUM_DURATION'\nRozmiar: '$SUM_SIZE
     RESPONSE=$(zenity --info --title 'Choose!' \
-            --text $TEXT_ON_PLAY \
+            --text "$TEXT_ON_PLAY"\
             --ok-label "Zamknij" \
             --extra-button 'Play' \
             --extra-button "Stop" \
@@ -54,10 +57,6 @@ playingView()
         PLAYING="false"
         handleExit
         ZENITY_PID="0"
-        echo $PLAYING
-        #echo $ffplay_pid
-        #ffplay_pid="null"
-        #echo "wyjscie"
     elif [ "$RESPONSE" == 'Play' ]; then
         # play files
         ZENITY_RESPONSES=$PLAY_CODE
@@ -73,37 +72,53 @@ playingView()
     elif [ "$RESPONSE" == 'zapisz do playlisty' ]; then
         # save playlist
         ZENITY_RESPONSES=$SAVE_PLAYLIST
-        SAVE_PLAYLIST
+        NamePickerPlaylistView
     else
         echo "Dialog closed or an error occurred"
         # Error, exit apllication
         ZENITY_RESPONSES=$ERROR_CODE
     fi
-    echo $PLAYING
 }
 
 playlistPickerView()
 {
-    if [ -r "$CONFIG_FILE_PATH" ]; then
-        # Declare an empty array
-        file_contents=()
-
+    # Declare an empty array
+    file_contents=()
+    if [ -r playlist.txt ]; then
+        PLAY_TEMP=$(mktemp)
+        cat $CONFIG_FILE_PATH | sed -e "s/\r//g" > $PLAY_TEMP
+        mv $PLAY_TEMP $CONFIG_FILE_PATH
         # Read the file line by line and append each line to the array
+        file_contents=()
         while read WIERSZ; do
             file_contents+=("$WIERSZ")
-        done < "$CONFIG_FILE_PATH"
+        done < $CONFIG_FILE_PATH
     else
-        NEW="$(echo "$CONFIG_FILE_PATH" | tr -d '\r')"
-        touch "$CONFIG_FILE_PATH"
+        touch $CONFIG_FILE_PATH
     fi
-    for (( i=0; i<${#file_contents[*]}; ++i)); do
-        data+=( "${file_contents[$i]}" )
-    done
-    RESPONSE=$(zenity --list \
+
+    RESPONSE=`zenity --list \
             --title "Wybierz playliste do odtworzenia" \
             --height 480 \
             --width 620 \
-            --column "playlista" "${data[@]}")
+            --column "playlista" "${file_contents[@]}"`
+
+    # Prepare songs
+    PLAYLIST_NAME=$RESPONSE
+
+    # CONFIG_FILE_PATH=$RESPONSE"ghvhg"
+    # echo $CONFIG_FILE_PATH
+    CUR_PLAYLIST="$RESPONSE.playlist"
+    echo $CUR_PLAYLIST
+    if [ -r "$CUR_PLAYLIST" ]; then
+    echo "im in"
+        # Read the file line by line and append each line to the array
+        while read WIERSZ; do
+            SONGS+=("$WIERSZ")
+        done < "$CONFIG_FILE_PATH"
+        echo $SONGS
+    fi
+    mp3Player
 }
 
 mp3PickerView()
@@ -113,6 +128,39 @@ mp3PickerView()
         --title="Wybierz pliki do zagrania" \
         --multiple
         )
+    #prepare songs
+    IFS='|'
+    FILES=($FILE)
+
+    # echo $FILE
+
+    # echo "nowa linia"
+
+    
+    SONGS=()
+    for CUR_FILE in "${FILES[@]}"; do
+    # echo $CUR_FILE
+    # asdadawewad=$(file -b --mime-type "$CUR_FILE")
+    # echo $asdadawewad
+    if file -b --mime-type "$CUR_FILE" | grep -q "audio/mpeg"; then
+        
+        SONGS+=("$CUR_FILE")
+    fi
+    done
+    # sleep 50
+    # echo $SONGS
+    # echo "nowa linia"
+    #echo $SONGS
+    # echo $FILE
+    # for element in "${SONGS[@]}"; do
+    #     echo "$element"
+    # done
+    # echo ${#SONGS[@]}
+    # echo "nowa linia"
+    # echo "${SONGS[0]}"
+    # echo "${SONGS[1]}"
+    # echo "${SONGS[2]}"
+    mp3Player
 }
 
 NamePickerPlaylistView()
@@ -122,6 +170,7 @@ NamePickerPlaylistView()
             --title="Nowa playlista" \
             --text="Nadaj nazwe swojej playliscie" \
             --entry-text "playlista${NEW_PLAYLIST_DATE}")
+    echo $RESPONSE
 }
 
 handleExit()

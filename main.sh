@@ -20,6 +20,24 @@
 
 . zenityHandler.rc
 . variables.rc
+. timeStat.rc
+
+getStats()
+{
+  SUM_DURATION=0
+  SUM_SIZE=0
+
+  for element in "${SONGS[@]}"; do
+    echo "$element"
+    DURATION=$(ffmppeg -i testowy.mp3 2>&1 | grep "Duration" | cut -d ' ' -f 4)
+    echo $DURATION
+    SIZE=$(stat -c "%s" $element)
+    SUM_SIZE=$(($SUM_SIZE+SIZE))
+    
+    DURATION=$(time_to_ms  $DURATION)
+    SUM_DURATION=$(($SUM_DURATION+$DURATION))
+  done
+}
 
 mp3Player()
 {
@@ -27,11 +45,12 @@ mp3Player()
   ZENITY_PID=0
   ITERATOR=0
 
-  ffplay -v 0 -nodisp -autoexit testowy.mp3 &
-  ffplay_pid=$!
+  # ffplay -v 0 -nodisp -autoexit testowy.mp3 &
+  # ffplay_pid=$!
 
   while [ "$PLAYING" == "true" ]; do
-
+      ffplay -v 0 -nodisp -autoexit ${SONGS[$ITERATOR]} &
+      ffplay_pid=$!
     while ps -p $ffplay_pid > /dev/null
     do
       if [ $ZENITY_PID -eq 0 ]; then
@@ -39,13 +58,8 @@ mp3Player()
         ZENITY_PID=$!
       fi
     done
-    #echo $PLAYING
-    #ffplay_pid="null"
-    #kill $ZENITY_PID
     ZENITY_PID=0
-    #echo "zmiana statusu"
     PLAYING="false"
-    #ZENITY_PID=0;
   done
   startView
 }
@@ -54,7 +68,12 @@ mp3Player()
 
 ffplay_pid="null"
 PLAYING="false"
-SONGS=()
+SONGS=(testowy.mp3 ../testowy2.mp3)
+
+DURATION=$(ffmppeg -i testowy.mp3 2>&1 | grep "Duration")
+    echo $DURATION
+
+#getStats
 
 while getopts "vhD" arg; do
   case $arg in
