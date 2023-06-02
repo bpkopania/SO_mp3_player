@@ -22,23 +22,6 @@
 . variables.rc
 . timeStat.rc
 
-getStats()
-{
-  SUM_DURATION=0
-  SUM_SIZE=0
-
-  for element in "${SONGS[@]}"; do
-    echo "$element"
-    DURATION=$(ffmppeg -i testowy.mp3 2>&1 | grep "Duration" | cut -d ' ' -f 4)
-    echo $DURATION
-    SIZE=$(stat -c "%s" $element)
-    SUM_SIZE=$(($SUM_SIZE+SIZE))
-    
-    DURATION=$(time_to_ms  $DURATION)
-    SUM_DURATION=$(($SUM_DURATION+$DURATION))
-  done
-}
-
 mp3Player()
 {
   PLAYING="true"
@@ -70,8 +53,8 @@ ffplay_pid="null"
 PLAYING="false"
 SONGS=(testowy.mp3 ../testowy2.mp3)
 
-DURATION=$(ffmppeg -i testowy.mp3 2>&1 | grep "Duration")
-    echo $DURATION
+# DURATION=$(ffmpeg -i testowy.mp3 2>&1 | grep "Duration" | cut -d ' ' -f 4)
+# echo $DURATION
 
 #getStats
 

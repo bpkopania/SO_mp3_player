@@ -38,8 +38,8 @@ startView()
 
 playingView()
 {
-    #getStats
-    TEXT_ON_PLAY=$PLAYLIST_NAME'\nCzas trwania: '$SUM_DURATION'\nRozmiar: '$SUM_SIZE
+    getStats
+    TEXT_ON_PLAY='Playlista: '$PLAYLIST_NAME'\nUtwór: '$(($ITERATOR+1))'/'${#SONGS[@]}'\nUtwór: '${SONGS[ITERATOR]}'\nCałkowity czas trwania: '$SUM_DURATION'\nSredni czas trwania utworu: '$AVERAGE_DURATION'\nRozmiar: '$SUM_SIZE
     RESPONSE=$(zenity --info --title 'Choose!' \
             --text "$TEXT_ON_PLAY"\
             --ok-label "Zamknij" \

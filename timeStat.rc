@@ -1,21 +1,19 @@
-time_to_ms() {
-    time=$1
-    h=$(echo $time | awk -F":" '{print $1}')
-    m=$(echo $time | awk -F":" '{print $2}')
-    s=$(echo $time | awk -F":" '{print $3}' | awk -F"," '{print $1}')
-    ms=$(echo $time | awk -F"," '{print $2}')
+getStats()
+{
+  EPOCH='jan 1 1970'
+  SUM_DURATION=0
+  SUM_SIZE=0
+
+  for element in "${SONGS[@]}"; do
+    DURATION=$(ffmpeg -i $element 2>&1 | grep "Duration" | cut -d ' ' -f 4 | sed 's/,$//')
+    SIZE=$(stat -c "%s" $element)
+    SUM_SIZE=$(($SUM_SIZE+SIZE))
     
-    total_ms=$(( ($h * 3600000) + ($m * 60000) + ($s * 1000) + ($ms) ))
-    echo $total_ms
-}
-
-# Function to convert milliseconds to time
-ms_to_time() {
-    ms=$1
-    h=$((ms / 3600000))
-    m=$(((ms % 3600000) / 60000))
-    s=$((((ms % 3600000) % 60000) / 1000))
-    ms=$((ms % 1000))
-
-    printf "%02d:%02d:%02d,%03d" $h $m $s $ms
+    #DURATION=$(time_to_ms  $DURATION)
+    DURATION=$(date -u -d "$EPOCH $DURATION" +%s)
+    SUM_DURATION=$(( $DURATION+ $SUM_DURATION))
+  done
+  AVERAGE_DURATION=$(($SUM_DURATION/${#SONGS[@]}))
+  AVERAGE_DURATION=$(date -d@$AVERAGE_DURATION -u +%M:%S)
+  SUM_DURATION=$(date -d@$SUM_DURATION -u +%H:%M:%S)
 }
