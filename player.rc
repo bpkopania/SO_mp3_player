@@ -55,10 +55,9 @@ mp3Player()
     do
        sleep 1
     done
-
-    if ps -p $ZENITY_PID > /dev/null && "$CAN_DISPLAY" == "true"
+    echo $STOPPED_TEMP
+    if ps -p $ZENITY_PID > /dev/null && [ "$STOPPED_TEMP" == "false" ]
     then
-        echo "zabijam"
       kill $ZENITY_PID
       nextSong
       PLAYING="true"
@@ -66,50 +65,52 @@ mp3Player()
       autoNext="true"
     fi
     
-    RESPONSE=$(cat $PLAY_TEMP)
-    ZENITY_PID=0
-
     if [ "$autoNext" == "false" ]; then
-        if [ "$RESPONSE" == "" ]; then
+        if [ "$STOPPED_TEMP" == "true" ]; then
+            wait $ZENITY_PID
+        fi
+        RESPONSE=$(cat $PLAY_TEMP)
+        rm $PLAY_TEMP
+        if [ "$RESPONSE" == "" ] && [ "$STOPPED_TEMP" == "false" ] ; then
             # Exit apllication
-            ZENITY_RESPONSES=$EXIT_CODE
             PLAYING="false"
+            ZENITY_PID=0
             handleExit
         elif [ "$RESPONSE" == 'Play' ]; then
             # play files
             killer
             PAUSED="false"
-            ZENITY_RESPONSES=$PLAY_CODE
             STOPPED_TEMP="false"
+            ZENITY_PID=0
         elif [ "$RESPONSE" == 'Stop' ]; then
             # stop playing
-            ZENITY_RESPONSES=$PAUSE_CODE
             killer
             PAUSED="true"
             STOPPED_TEMP="true"
+            PLAYING="true"
+            ZENITY_PID=0
         elif [ "$RESPONSE" == '<<' ]; then
             # go to previous
             killer
             prevSong
             PLAYING="true"
             PAUSED="false"
-            ZENITY_RESPONSES=$PREVIOUS_CODE
+            ZENITY_PID=0
         elif [ "$RESPONSE" == '>>' ]; then
             # go to next
             killer
             nextSong
             PLAYING="true"
             PAUSED="false"
-            ZENITY_RESPONSES=$NEXT_CODE
+            ZENITY_PID=0
         elif [ "$RESPONSE" == 'zapisz do playlisty' ]; then
             # save playlist
-            ZENITY_RESPONSES=$SAVE_PLAYLIST
+            ZENITY_PID=0
             killer
             NamePickerPlaylistView
         fi
     fi
-    
-  rm $PLAY_TEMP
   done
+  echo $RESPONSE
   startView
 }

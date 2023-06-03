@@ -19,9 +19,11 @@
 # or contact # the Free Software Foundation for a copy)
 
 . zenityHandler.rc
-. variables.rc
+#. variables.rc
 . timeStat.rc
 . player.rc
+
+CONFIG_FILE_PATH="playlist.txt"
 
 #start the program
 

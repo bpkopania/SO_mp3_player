@@ -13,26 +13,21 @@ startView()
 
     if [ $rc -eq 0 ]; then
         # Exit apllication
-        ZENITY_RESPONSES=$EXIT_CODE
         exit
     elif [ "$RESPONSE" == 'Odtwórz przykładowe pliki' ]; then
         # play example files
-        ZENITY_RESPONSES=$EXAMPLE_FILES_CODE
         PLAYLIST_NAME="Przykladowe pliki"
         mp3Player
     elif [ "$RESPONSE" == 'Wybierz pliki do odtworzenia' ]; then
         # Pick files to play
-        ZENITY_RESPONSES=$CUSTOM_FILES_CODE
         PLAYLIST_NAME="Nowe pliki"
         mp3PickerView
     elif [ "$RESPONSE" == 'Wybierz playliste do odtworzenia' ]; then
         # pick playlist to play
-        ZENITY_RESPONSES=$PLAYLIST_PICKER_CODE
         playlistPickerView
     else
         echo "Dialog closed or an error occurred"
         # Error, exit apllication
-        ZENITY_RESPONSES=$ERROR_CODE
     fi
 }
 
@@ -121,7 +116,8 @@ handleExit()
 
 killer()
 {
-    if [ "$ffplay_pid" != "null" ]; then
+    if ps -p $ffplay_pid > /dev/null
+    then
         kill $ffplay_pid
         #ffplay_pid="null"
     fi
