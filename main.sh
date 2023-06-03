@@ -21,42 +21,12 @@
 . zenityHandler.rc
 . variables.rc
 . timeStat.rc
+. player.rc
 
-mp3Player()
-{
-  PLAYING="true"
-  ZENITY_PID=0
-  ITERATOR=0
-
-  # ffplay -v 0 -nodisp -autoexit testowy.mp3 &
-  # ffplay_pid=$!
-
-  while [ "$PLAYING" == "true" ]; do
-      ffplay -v 0 -nodisp -autoexit ${SONGS[$ITERATOR]} &
-      ffplay_pid=$!
-    while ps -p $ffplay_pid > /dev/null
-    do
-      if [ $ZENITY_PID -eq 0 ]; then
-        playingView &
-        ZENITY_PID=$!
-      fi
-    done
-    ZENITY_PID=0
-    PLAYING="false"
-  done
-  startView
-}
 
 #start the program
 
-ffplay_pid="null"
-PLAYING="false"
-SONGS=(testowy.mp3 ../testowy2.mp3)
-
-# DURATION=$(ffmpeg -i testowy.mp3 2>&1 | grep "Duration" | cut -d ' ' -f 4)
-# echo $DURATION
-
-#getStats
+SONGS=(short.mp3 ../testowy2.mp3 testowy.mp3)
 
 while getopts "vhD" arg; do
   case $arg in

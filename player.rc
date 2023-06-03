@@ -1,0 +1,112 @@
+nextSong()
+{
+    ITERATOR=$(($ITERATOR+1))
+    if [ $ITERATOR -ge ${#SONGS[@]} ]; then
+        ITERATOR=0
+    fi
+}
+
+prevSong()
+{
+    ITERATOR=$(($ITERATOR-1))
+    if [ $ITERATOR -lt 0 ]; then
+        ITERATOR=$((${#SONGS[@]}-1))
+    fi
+}
+
+mp3Player()
+{
+  PAUSED="false"
+  ffplay_pid="null"
+  PLAYING="true"
+  ZENITY_PID=0
+  ITERATOR=0
+  CAN_DISPLAY="true"
+
+  # ffplay -v 0 -nodisp -autoexit testowy.mp3 &
+  # ffplay_pid=$!
+
+  while [ "$PLAYING" == "true" ]; do
+    autoNext="false"
+    if [ "$PAUSED" == "false" ]; then
+      ffplay -v 0 -nodisp -autoexit ${SONGS[$ITERATOR]} &
+      ffplay_pid=$!
+      PAUSED="true"
+    fi
+    if [ $ZENITY_PID -eq 0 ]; then
+          getStats
+          TEXT_ON_PLAY='Playlista: '$PLAYLIST_NAME'\nUtwór: '$(($ITERATOR+1))'/'${#SONGS[@]}'\nUtwór: '${SONGS[ITERATOR]}'\nCałkowity czas trwania: '$SUM_DURATION'\nSredni czas trwania utworu: '$AVERAGE_DURATION'\nRozmiar: '$SUM_SIZE
+          PLAY_TEMP=$(mktemp)
+          (zenity --info --title 'Choose!' \
+          --text "$TEXT_ON_PLAY"\
+          --ok-label "Zamknij" \
+          --extra-button 'Play' \
+          --extra-button "Stop" \
+          --extra-button "<<" \
+          --extra-button ">>" \
+          --extra-button "zapisz do playlisty" \
+          > $PLAY_TEMP) &
+          ZENITY_PID=$!
+    fi
+
+    while ps -p $ffplay_pid > /dev/null && ps -p $ZENITY_PID > /dev/null
+    do
+       sleep 1
+    done
+
+    if ps -p $ZENITY_PID > /dev/null && "$CAN_DISPLAY" == "true"
+    then
+      kill $ZENITY_PID
+      #TODO 
+      # we know that ffplay stopped here
+      nextSong
+      PLAYING="true"
+      PAUSED="false"
+      autoNext="true"
+    fi
+
+    RESPONSE=$(cat $PLAY_TEMP)
+    ZENITY_PID=0
+
+    if [ "$autoNext" == "false" ]; then
+        if [ "$RESPONSE" == "" ]; then
+            # Exit apllication
+            ZENITY_RESPONSES=$EXIT_CODE
+            PLAYING="false"
+            handleExit
+        elif [ "$RESPONSE" == 'Play' ]; then
+            # play files
+            killer
+            PAUSED="false"
+            ZENITY_RESPONSES=$PLAY_CODE
+        elif [ "$RESPONSE" == 'Stop' ]; then
+            # stop playing
+            ZENITY_RESPONSES=$PAUSE_CODE
+            killer
+            PAUSED="true"
+        elif [ "$RESPONSE" == '<<' ]; then
+            # go to previous
+            killer
+            prevSong
+            PLAYING="true"
+            PAUSED="false"
+            echo $ITERATOR
+            ZENITY_RESPONSES=$PREVIOUS_CODE
+        elif [ "$RESPONSE" == '>>' ]; then
+            # go to next
+            killer
+            nextSong
+            PLAYING="true"
+            PAUSED="false"
+            ZENITY_RESPONSES=$NEXT_CODE
+        elif [ "$RESPONSE" == 'zapisz do playlisty' ]; then
+            # save playlist
+            ZENITY_RESPONSES=$SAVE_PLAYLIST
+            NamePickerPlaylistView
+        fi
+    fi
+    
+  rm $PLAY_TEMP
+  done
+  startView
+}
