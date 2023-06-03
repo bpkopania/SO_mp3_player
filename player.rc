@@ -22,12 +22,14 @@ mp3Player()
   ZENITY_PID=0
   ITERATOR=0
   CAN_DISPLAY="true"
+  STOPPED_TEMP="false"
 
   # ffplay -v 0 -nodisp -autoexit testowy.mp3 &
   # ffplay_pid=$!
 
   while [ "$PLAYING" == "true" ]; do
     autoNext="false"
+    
     if [ "$PAUSED" == "false" ]; then
       ffplay -v 0 -nodisp -autoexit ${SONGS[$ITERATOR]} &
       ffplay_pid=$!
@@ -56,15 +58,14 @@ mp3Player()
 
     if ps -p $ZENITY_PID > /dev/null && "$CAN_DISPLAY" == "true"
     then
+        echo "zabijam"
       kill $ZENITY_PID
-      #TODO 
-      # we know that ffplay stopped here
       nextSong
       PLAYING="true"
       PAUSED="false"
       autoNext="true"
     fi
-
+    
     RESPONSE=$(cat $PLAY_TEMP)
     ZENITY_PID=0
 
@@ -79,18 +80,19 @@ mp3Player()
             killer
             PAUSED="false"
             ZENITY_RESPONSES=$PLAY_CODE
+            STOPPED_TEMP="false"
         elif [ "$RESPONSE" == 'Stop' ]; then
             # stop playing
             ZENITY_RESPONSES=$PAUSE_CODE
             killer
             PAUSED="true"
+            STOPPED_TEMP="true"
         elif [ "$RESPONSE" == '<<' ]; then
             # go to previous
             killer
             prevSong
             PLAYING="true"
             PAUSED="false"
-            echo $ITERATOR
             ZENITY_RESPONSES=$PREVIOUS_CODE
         elif [ "$RESPONSE" == '>>' ]; then
             # go to next
@@ -102,6 +104,7 @@ mp3Player()
         elif [ "$RESPONSE" == 'zapisz do playlisty' ]; then
             # save playlist
             ZENITY_RESPONSES=$SAVE_PLAYLIST
+            killer
             NamePickerPlaylistView
         fi
     fi

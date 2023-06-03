@@ -23,7 +23,6 @@
 . timeStat.rc
 . player.rc
 
-
 #start the program
 
 SONGS=(short.mp3 ../testowy2.mp3 testowy.mp3)

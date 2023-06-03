@@ -63,14 +63,15 @@ playlistPickerView()
     PLAYLIST_NAME=$RESPONSE
 
     CUR_PLAYLIST="$RESPONSE.playlist"
-    echo $CUR_PLAYLIST
+    SONGS=()
     if [ -r "$CUR_PLAYLIST" ]; then
-    echo "im in"
+        PLAY_TEMP=$(mktemp)
+        cat $CUR_PLAYLIST | sed -e "s/\r//g" > $PLAY_TEMP
+        mv $PLAY_TEMP $CUR_PLAYLIST
         # Read the file line by line and append each line to the array
         while read WIERSZ; do
             SONGS+=("$WIERSZ")
-        done < "$CONFIG_FILE_PATH"
-        echo $SONGS
+        done < "$CUR_PLAYLIST"
     fi
     mp3Player
 }
@@ -102,7 +103,15 @@ NamePickerPlaylistView()
             --title="Nowa playlista" \
             --text="Nadaj nazwe swojej playliscie" \
             --entry-text "playlista${NEW_PLAYLIST_DATE}")
-    echo $RESPONSE
+    echo $RESPONSE >> $CONFIG_FILE_PATH
+    
+    RESPONSE=$RESPONSE".playlist"
+    touch $RESPONSE
+    for CUR_SONG in "${SONGS[@]}"; do
+        echo $CUR_SONG >> $RESPONSE
+    done
+
+    mp3Player
 }
 
 handleExit()
