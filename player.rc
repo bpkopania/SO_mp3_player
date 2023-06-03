@@ -29,7 +29,6 @@ mp3Player()
 
   while [ "$PLAYING" == "true" ]; do
     autoNext="false"
-    
     if [ "$PAUSED" == "false" ]; then
       ffplay -v 0 -nodisp -autoexit ${SONGS[$ITERATOR]} &
       ffplay_pid=$!
@@ -55,16 +54,15 @@ mp3Player()
     do
        sleep 1
     done
-    echo $STOPPED_TEMP
     if ps -p $ZENITY_PID > /dev/null && [ "$STOPPED_TEMP" == "false" ]
     then
       kill $ZENITY_PID
+      ZENITY_PID=0
       nextSong
       PLAYING="true"
       PAUSED="false"
       autoNext="true"
     fi
-    
     if [ "$autoNext" == "false" ]; then
         if [ "$STOPPED_TEMP" == "true" ]; then
             wait $ZENITY_PID
